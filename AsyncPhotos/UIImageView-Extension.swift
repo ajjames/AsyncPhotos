@@ -49,6 +49,12 @@ public extension UIImageView
         self.downloader?.cancel()
     }
 
+
+    //--------------------------------------------------------------------------------------------------------
+    // BELOW:
+    // Contains objective-C voodoo until Swift offers first-class support for stored properties in extensions
+    //--------------------------------------------------------------------------------------------------------
+
     private var downloader: Downloader?
     {
         get
