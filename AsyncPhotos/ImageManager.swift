@@ -25,8 +25,24 @@ public class ImageManager
         return Static.instance!
     }
 
-    public class func getImage(url:NSURL, completionHandler:(image:UIImage?, error: NSError?)->())
+    public class func getImageAsynchronously(url:NSURL, completionHandler:(image:UIImage?, error: NSError?)->())
     {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), { () -> Void in
+            ImageManager.getImageSynchronously(url, cancelableOperation: nil, completionHandler: completionHandler)
+        })
+    }
+
+    public class func getImageSynchronously(url:NSURL, cancelableOperation:NSOperation?, completionHandler:(image:UIImage?, error: NSError?)->())
+    {
+        let isCancelled = cancelableOperation?.cancelled ?? false
+        if isCancelled
+        {
+            self.hideNetworkActivity()
+            dispatch_async(dispatch_get_main_queue()) {
+                completionHandler(image: nil, error: nil)
+            }
+        }
+
         showNetworkActivity()
         var image:UIImage?
         var returnError:NSError?
@@ -46,11 +62,13 @@ public class ImageManager
 
         if image == nil
         {
-            returnError = NSError(domain:"Error not loaded", code:0, userInfo:nil)
+            returnError = NSError(domain:"Error: unable to load image", code:0, userInfo:nil)
         }
 
         self.hideNetworkActivity()
-        completionHandler(image:image,error:returnError)
+        dispatch_async(dispatch_get_main_queue()) {
+            completionHandler(image:image,error:returnError)
+        }
     }
 
     public class func fetchDataSyncronously(url:NSURL) -> NSData?

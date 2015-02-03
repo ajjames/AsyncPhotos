@@ -18,12 +18,16 @@ public class Downloader : NSObject
         self.operation = operation
     }
 
-    public convenience init(imageAtUrl imageUrl:NSURL, completion: (image:UIImage?,error:NSError?)->())
+    public convenience init(imageAtUrl imageUrl:NSURL, completion: ((image:UIImage?,error:NSError?)->())?)
     {
-        var newOperation = NSBlockOperation { () -> Void in
-            ImageManager.getImage(imageUrl, completionHandler: { (image, error) -> () in
-                completion(image: image, error: error)
-            })
+        var newOperation = NSBlockOperation()
+        newOperation.addExecutionBlock { () -> Void in
+            ImageManager.getImageSynchronously(imageUrl, cancelableOperation:newOperation) { (image, error) -> () in
+                if let callback = completion
+                {
+                    callback(image: image, error: error)
+                }
+            }
         }
         self.init(operation: newOperation)
     }
@@ -46,5 +50,7 @@ public class Downloader : NSObject
             }
         }
     }
-
+    
 }
+
+
